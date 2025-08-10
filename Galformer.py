@@ -60,7 +60,7 @@ class G:
 l = ['000001.SS', 'AAPL', 'BTC-USD' , 'DJI', 'Gold_daily','GSPC','IXIC']
 
 for i in l:
-    filename = 'C:/lyx/learning/会议论文/三支同时期数据/' + i + '.csv'
+    filename = 'Datasets/' + i + '.csv'
     df = pd.read_csv(filename,delimiter=',',usecols=['Date','Open','High','Low','Close', 'Adj Close','Volume'])
     df = df.sort_values('Date')
     division_rate1 = 0.8
@@ -307,7 +307,7 @@ for i in l:
 
             #应该concatenate！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
             for i in range(self.num_layers):
-                x = self.enc_layers[i](x, training)
+                x = self.enc_layers[i](x, training=training)
 
             return x  # (G.batch_size, G.src_len, G.dense_dim)
 
@@ -458,7 +458,7 @@ for i in l:
                                        enc_output,
                                        self.dec_ahead_mask,
                                        self.enc_memory_mask,
-                                       training)
+                                       training=training)
 
             print('y.shape', y.shape)
             return y
@@ -515,27 +515,27 @@ for i in l:
             enc_input = x[:, :self.src_len, :]   # (G.batch_size, G.src_len, G.num_features)
             dec_input = x[:, -self.dec_len:, ]  # only want the SOC thats why -1 is there!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            print(type(dec_input))
-            print('dec_input.shape',dec_input.shape)
+            # print(type(dec_input))
+            # print('dec_input.shape',dec_input.shape)
             #dec_input = dec_input.resize_as_(dec_input.shape[0],dec_input.shape[1],1)#(128,3)->(128,3,1)
 
 
 
 
-            enc_output = self.encoder(enc_input, training)  # (G.batch_size, G.src_len, G.num_features)
-            print('enc_output.shape', enc_output.shape)
+            enc_output = self.encoder(enc_input, training=training)  # (G.batch_size, G.src_len, G.num_features)
+            # print('enc_output.shape', enc_output.shape)
 
-            dec_output = self.decoder(dec_input, enc_output, training)
-            print('dec_output.shape', dec_output.shape)
+            dec_output = self.decoder(dec_input, enc_output, training=training)
+            # print('dec_output.shape', dec_output.shape)
             # (G.batch_size, G.tgt_len, 32)
 
             final_output = self.linear_map(dec_output)  # (G.batch_size, G.tgt_len, 1)
 
-            print('final_output.shape', final_output.shape)
+            # print('final_output.shape', final_output.shape)
             final_output = tf.transpose(final_output,perm=[0,2,1])
             final_output = Dense(G.tgt_len)(final_output)
             final_output = tf.transpose(final_output,perm=[0,2,1])
-            print('final_output.shape', final_output.shape)
+            # print('final_output.shape', final_output.shape)
             return final_output
 
     def calculate_accuracy(pre, real):
@@ -564,14 +564,14 @@ for i in l:
             products.append(real[i] *  pre[i])
         accuracy = (sum([int(x > 0) for x in products])) / len(products)
         return accuracy'''
-        print('real.shape', real.shape)
-        print('pre.shape', pre.shape)
+        # print('real.shape', real.shape)
+        # print('pre.shape', pre.shape)
         mse = tf.reduce_mean(tf.square(pre - real))
         print('mse！！！！！',K.get_value(mse))
-        print('real666.shape', real.shape)
-        print('pre666.shape', pre.shape)#real666.shape (None, 3)  pre666.shape (None, 3)
-        print('real666', real)
-        print('pre666', pre)
+        # print('real666.shape', real.shape)
+        # print('pre666.shape', pre.shape)#real666.shape (None, 3)  pre666.shape (None, 3)
+        # print('real666', real)
+        # print('pre666', pre)
         accu = tf.multiply(real,pre)#矩阵点积，不是乘法，得出正负，正的就是趋势预测正确
         accu = tf.nn.relu(accu)#relu(x) = max(0,x)
         accu = tf.sign(accu)#正数变1，0不变
@@ -678,10 +678,14 @@ for i in l:
 
     stock = i
     model2 = 'Galformer'
-    csv_path = 'C:/lyx/learning/期刊论文/程序结果/对比图表/' + stock +'/' + model2 + '.xls'
+    csv_path = 'results/' + stock +'/' + model2 + '.xls'
     df = pd.DataFrame(predicted_stock_price_multi_head)
     df.columns.name = None
     df.to_excel(csv_path,index=False,header=None)
+    # Save the trained model to the results directory
+    model_save_path = f'results/{stock}/{model2}_model.h5'
+    model.save(model_save_path)
+    print(f'Model saved to {model_save_path}')
 
 
     accu = np.multiply(predicted_stock_price_multi_head_dff1,y_test_dff1)
