@@ -18,6 +18,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from transformer_helper_dc import *
 from rolling_and_plot_dc import data_plot, rolling_split, normalize, validate
+import os.path as osp
+import os
 
 tf.config.run_functions_eagerly(True)
 
@@ -52,7 +54,7 @@ class G:
     T_mult = 2
     T_cur = 0.0
     # training
-    epochs = 200 #21 should be T_i + a power of T_mult, ex) T_mult = 2 -> epochs = 2**5 + 1 = 32+1 = 33   257
+    epochs = 1 #21 should be T_i + a power of T_mult, ex) T_mult = 2 -> epochs = 2**5 + 1 = 32+1 = 33   257
     learning_rate = 0.003#0.0045
     min_learning_rate = 7e-11
     #weight_decay = 0.0 #No weight decay param in the the keras optimizers
@@ -602,8 +604,10 @@ for i in l:
         print(df1.head())
         data = df.values
         data1 = df1.values
+        row1 = round(division_rate1 * data.shape[0])  
         row2 = round(division_rate2 * list1.shape[0])
         # 训练集和测试集划分
+        train = data[:int(row1), :]
         test = data1[int(row2): , :]
         test = test.reshape(-1, 1)#取原来没有归一化的adj数据作为样本
         standard_scaler = preprocessing.StandardScaler()
@@ -678,7 +682,8 @@ for i in l:
 
     stock = i
     model2 = 'Galformer'
-    csv_path = 'results/' + stock +'/' + model2 + '.xls'
+    csv_path = 'results/' + stock +'/' + model2 + '.xlsx'
+    os.makedirs(osp.dirname(csv_path), exist_ok=True)  # Create the directory if it does not exist
     df = pd.DataFrame(predicted_stock_price_multi_head)
     df.columns.name = None
     df.to_excel(csv_path,index=False,header=None)
@@ -686,6 +691,11 @@ for i in l:
     model_save_path = f'results/{stock}/{model2}_model.h5'
     model.save(model_save_path)
     print(f'Model saved to {model_save_path}')
+
+    # Load the trained model from the saved file
+    # loaded_model_path = f'results/{stock}/{model2}_model.h5'
+    # loaded_model = tf.keras.models.load_model(loaded_model_path, custom_objects={'up_down_accuracy': up_down_accuracy})
+    # print(f'Model loaded from {loaded_model_path}')
 
 
     accu = np.multiply(predicted_stock_price_multi_head_dff1,y_test_dff1)
@@ -720,8 +730,11 @@ for i in l:
     plt.xlabel('Date')
     plt.ylabel('Adj closing Price')
     plt.legend(fontsize=18)
-    plt.show()
-    plt.close()
+    # plt.show()
+    # plt.close()
+    plot_save_path = f'results/{stock}/{model2}_plot.png'
+    plt.savefig(plot_save_path)
+    print(f'Plot saved to {plot_save_path}')
 
 
     '''
