@@ -8,7 +8,6 @@ from plotly.subplots import make_subplots
 from sklearn.preprocessing import MaxAbsScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
 
-import torch
 
 
 def helper(value, j):
